@@ -1,0 +1,8 @@
+$kind: http-request
+url: "{{base_url}}/mesero/orders/1/items/1?cantidad=3"
+method: PUT
+headers:
+  Content-Type: application/json
+queryParams:
+  cantidad: "3"
+order: 8000

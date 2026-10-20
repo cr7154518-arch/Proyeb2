@@ -1,0 +1,6 @@
+$kind: http-request
+url: "{{base_url}}/mesero/menu"
+method: GET
+headers:
+  Content-Type: application/json
+order: 1000

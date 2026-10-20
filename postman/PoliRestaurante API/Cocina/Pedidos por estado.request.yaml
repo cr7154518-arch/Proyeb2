@@ -1,0 +1,8 @@
+$kind: http-request
+url: "{{base_url}}/cocina/orders?estado=LISTO"
+method: GET
+headers:
+  Content-Type: application/json
+queryParams:
+  estado: LISTO
+order: 2000

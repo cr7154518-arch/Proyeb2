@@ -1,0 +1,6 @@
+$kind: http-request
+url: "{{base_url}}/cocina/orders/pending"
+method: GET
+headers:
+  Content-Type: application/json
+order: 1000

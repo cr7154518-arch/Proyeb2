@@ -1,0 +1,12 @@
+$kind: http-request
+url: "{{base_url}}/mesero/orders/1"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "estado": "EN PREPARACIÓN"
+    }
+order: 4000

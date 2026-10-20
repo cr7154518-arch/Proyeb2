@@ -1,0 +1,14 @@
+$kind: http-request
+url: "{{base_url}}/admin/inventory"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "nombre_insumo": "Arroz",
+      "cantidad": 10,
+      "unidad_medida": "kg"
+    }
+order: 1000

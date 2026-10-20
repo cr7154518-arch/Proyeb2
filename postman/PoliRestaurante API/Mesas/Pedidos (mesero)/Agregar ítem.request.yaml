@@ -1,0 +1,15 @@
+$kind: http-request
+url: "{{base_url}}/mesero/orders/1/items"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "order_id": 1,
+      "product_id": 1,
+      "cantidad": 2,
+      "precio_unitario": 0
+    }
+order: 6000

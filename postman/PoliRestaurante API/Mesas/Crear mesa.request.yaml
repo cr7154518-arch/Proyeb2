@@ -1,0 +1,13 @@
+$kind: http-request
+url: "{{base_url}}/admin/tables"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "numero": 1,
+      "capacidad": 4
+    }
+order: 1000

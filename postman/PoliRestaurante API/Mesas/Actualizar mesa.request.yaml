@@ -1,0 +1,14 @@
+$kind: http-request
+url: "{{base_url}}/admin/tables/1"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "numero": 1,
+      "capacidad": 6,
+      "estado": "ocupada"
+    }
+order: 4000

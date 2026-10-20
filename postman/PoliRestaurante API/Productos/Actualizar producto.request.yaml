@@ -1,0 +1,16 @@
+$kind: http-request
+url: "{{base_url}}/admin/products/1"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "nombre": "Hamburguesa Especial",
+      "descripcion": "Carne 150g y queso",
+      "precio": 17000,
+      "disponibilidad": true,
+      "categoria_id": 1
+    }
+order: 4000
