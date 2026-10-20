@@ -1,0 +1,115 @@
+/* Importación de fuente moderna desde Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+:root {
+    --primary-color: #4f46e5;
+    --primary-hover: #4338ca;
+    --success-color: #10b981;
+    --dark-bg: #0f172a;
+    --card-bg: #ffffff;
+    --body-bg: #f8fafc;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --border-color: #e2e8f0;
+}
+
+body {
+    background-color: var(--body-bg) !important;
+    font-family: 'Poppins', sans-serif !important;
+    color: var(--text-main);
+}
+
+/* Encabezado Principal */
+h1 {
+    color: var(--dark-bg);
+    letter-spacing: -0.5px;
+}
+
+/* Tarjetas (Cards) estilo Dashboard */
+.card {
+    border: 1px solid var(--border-color) !important;
+    border-radius: 16px !important;
+    background-color: var(--card-bg);
+    transition: all 0.25s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 24px -10px rgba(15, 23, 42, 0.08) !important;
+}
+
+/* Encabezados de Tarjetas */
+.card-header {
+    border-top-left-radius: 16px !important;
+    border-top-right-radius: 16px !important;
+    padding: 0.9rem 1.25rem !important;
+}
+
+.card-header.bg-dark {
+    background-color: var(--dark-bg) !important;
+}
+
+.card-header.bg-primary {
+    background-color: var(--primary-color) !important;
+}
+
+.card-header.bg-success {
+    background-color: var(--success-color) !important;
+}
+
+/* Formulario e Inputs */
+.form-control {
+    border-radius: 10px !important;
+    border: 1px solid var(--border-color);
+    padding: 0.55rem 0.85rem;
+    font-size: 0.9rem;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15) !important;
+}
+
+/* Botones con efectos suaves */
+.btn {
+    border-radius: 10px !important;
+    font-weight: 500;
+    padding: 0.55rem 1rem;
+    transition: all 0.2s ease;
+}
+
+.btn-primary {
+    background-color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-hover) !important;
+    border-color: var(--primary-hover) !important;
+}
+
+.btn-success {
+    background-color: var(--success-color) !important;
+    border-color: var(--success-color) !important;
+}
+
+/* Lista de Menú */
+.list-group-item {
+    border-color: var(--border-color) !important;
+    padding: 0.85rem 1.1rem !important;
+}
+
+.badge.bg-primary {
+    background-color: rgba(79, 70, 229, 0.1) !important;
+    color: var(--primary-color) !important;
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 6px 12px;
+}
+
+/* Rejilla de Mesas */
+.card.border-success {
+    border-color: rgba(16, 185, 129, 0.3) !important;
+    background-color: rgba(16, 185, 129, 0.02) !important;
+}
