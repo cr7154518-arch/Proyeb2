@@ -1,0 +1,15 @@
+$kind: http-request
+url: "{{base_url}}/admin/users"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "nombre": "Ana",
+      "correo": "ana@poli.edu.co",
+      "contrasena": "1234",
+      "rol": "mesero"
+    }
+order: 1000

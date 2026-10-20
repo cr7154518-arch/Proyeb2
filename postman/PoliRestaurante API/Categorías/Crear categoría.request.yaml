@@ -1,0 +1,12 @@
+$kind: http-request
+url: "{{base_url}}/admin/categories"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "nombre": "Bebidas"
+    }
+order: 1000

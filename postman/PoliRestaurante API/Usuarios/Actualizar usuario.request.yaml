@@ -1,0 +1,13 @@
+$kind: http-request
+url: "{{base_url}}/admin/users/1"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "nombre": "Ana María",
+      "rol": "admin"
+    }
+order: 4000

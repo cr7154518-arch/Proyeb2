@@ -1,0 +1,12 @@
+$kind: http-request
+url: "{{base_url}}/admin/categories/1"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "nombre": "Platos fuertes"
+    }
+order: 4000
