@@ -25,6 +25,25 @@ h1 {
     letter-spacing: -0.5px;
 }
 
+/* Pestañas (Nav Pills) */
+.nav-pills .nav-link {
+    color: var(--text-muted);
+    border-radius: 12px;
+    padding: 0.6rem 1rem;
+    transition: all 0.2s ease;
+}
+
+.nav-pills .nav-link:hover {
+    color: var(--primary-color);
+    background-color: rgba(79, 70, 229, 0.05);
+}
+
+.nav-pills .nav-link.active {
+    background-color: var(--primary-color) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+}
+
 /* Tarjetas (Cards) estilo Dashboard */
 .card {
     border: 1px solid var(--border-color) !important;
@@ -34,15 +53,15 @@ h1 {
 }
 
 .card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 12px 24px -10px rgba(15, 23, 42, 0.08) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px -8px rgba(15, 23, 42, 0.08) !important;
 }
 
 /* Encabezados de Tarjetas */
 .card-header {
     border-top-left-radius: 16px !important;
     border-top-right-radius: 16px !important;
-    padding: 0.9rem 1.25rem !important;
+    padding: 0.85rem 1.2rem !important;
 }
 
 .card-header.bg-dark {
@@ -57,8 +76,22 @@ h1 {
     background-color: var(--success-color) !important;
 }
 
+/* Tablas */
+.table th {
+    font-weight: 600;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.table td {
+    font-size: 0.9rem;
+    padding: 0.75rem 0.85rem;
+}
+
 /* Formulario e Inputs */
-.form-control {
+.form-control, .form-select {
     border-radius: 10px !important;
     border: 1px solid var(--border-color);
     padding: 0.55rem 0.85rem;
@@ -66,7 +99,7 @@ h1 {
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.form-control:focus {
+.form-control:focus, .form-select:focus {
     border-color: var(--primary-color);
     box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15) !important;
 }
@@ -75,7 +108,7 @@ h1 {
 .btn {
     border-radius: 10px !important;
     font-weight: 500;
-    padding: 0.55rem 1rem;
+    padding: 0.5rem 0.9rem;
     transition: all 0.2s ease;
 }
 
@@ -94,22 +127,8 @@ h1 {
     border-color: var(--success-color) !important;
 }
 
-/* Lista de Menú */
-.list-group-item {
-    border-color: var(--border-color) !important;
-    padding: 0.85rem 1.1rem !important;
-}
-
-.badge.bg-primary {
-    background-color: rgba(79, 70, 229, 0.1) !important;
-    color: var(--primary-color) !important;
-    font-size: 0.85rem;
-    font-weight: 600;
-    padding: 6px 12px;
-}
-
-/* Rejilla de Mesas */
-.card.border-success {
-    border-color: rgba(16, 185, 129, 0.3) !important;
-    background-color: rgba(16, 185, 129, 0.02) !important;
+.badge {
+    padding: 6px 10px;
+    font-weight: 500;
+    border-radius: 8px;
 }

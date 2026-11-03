@@ -7,167 +7,478 @@
 
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <!-- Estilos Personalizados PoliRestaurante -->
     <link href="/static/styles.css" rel="stylesheet">
 </head>
 <body class="bg-light py-4">
 
-    <div class="container">
-        <h1 class="text-center fw-bold mb-4">PoliRestaurante</h1>
-
-        <!-- SECCIÓN ADMINISTRADOR: REGISTRO -->
-        <div class="row mb-4">
-            <!-- Formulario Crear Producto -->
-            <div class="col-md-6 mb-3">
-                <div class="card shadow-sm border-0">
-                    <div class="card-header bg-dark text-white fw-bold">
-                        ➕ Agregar Producto al Menú
-                    </div>
-                    <div class="card-body">
-                        <form id="form-producto" onsubmit="crearProducto(event)">
-                            <div class="mb-2">
-                                <label class="form-label small mb-1">Nombre del Producto</label>
-                                <input type="text" id="prod-nombre" class="form-control" placeholder="Ej: Hamburguesa Especial" required>
-                            </div>
-                            <div class="mb-2">
-                                <label class="form-label small mb-1">Precio ($)</label>
-                                <input type="number" step="0.01" id="prod-precio" class="form-control" placeholder="Ej: 15000" required>
-                            </div>
-                            <div class="mb-2">
-                                <label class="form-label small mb-1">Descripción</label>
-                                <input type="text" id="prod-descripcion" class="form-control" placeholder="Ej: Carne 150g, queso y tocineta">
-                            </div>
-                            <div class="mb-2">
-                                <label class="form-label small mb-1">ID de Categoría</label>
-                                <input type="number" id="prod-categoria" class="form-control" placeholder="Ej: 1 (Opcional, por defecto 1)">
-                            </div>
-                            <button type="submit" class="btn btn-primary btn-sm w-100 mt-2">Guardar Producto</button>
-                        </form>
-                    </div>
+    <div class="container-xl">
+        <!-- HEADER -->
+        <header class="d-flex flex-wrap justify-content-between align-items-center pb-3 mb-4 border-bottom">
+            <div class="d-flex align-items-center gap-2">
+                <span class="fs-2">🍽️</span>
+                <div>
+                    <h1 class="h3 fw-bold mb-0 text-primary">PoliRestaurante</h1>
+                    <small class="text-muted">Sistema Integral de Gestión - Admin, Mesero y Cocina</small>
                 </div>
             </div>
-
-            <!-- Formulario Crear Mesa -->
-            <div class="col-md-6 mb-3">
-                <div class="card shadow-sm border-0">
-                    <div class="card-header bg-dark text-white fw-bold">
-                          Agregar Mesa
-                    </div>
-                    <div class="card-body">
-                        <form id="form-mesa" onsubmit="crearMesa(event)">
-                            <div class="mb-2">
-                                <label class="form-label small mb-1">Número de Mesa</label>
-                                <input type="number" id="mesa-numero" class="form-control" placeholder="Ej: 1" required>
-                            </div>
-                            <div class="mb-2">
-                                <label class="form-label small mb-1">Capacidad (personas)</label>
-                                <input type="number" id="mesa-capacidad" class="form-control" placeholder="Ej: 4" required>
-                            </div>
-                            <button type="submit" class="btn btn-success btn-sm w-100 mt-2">Guardar Mesa</button>
-                        </form>
-                    </div>
-                </div>
+            <div>
+                <span class="badge bg-primary px-3 py-2 rounded-pill fs-7">
+                    <i class="bi bi-shield-check me-1"></i> Panel de Control
+                </span>
             </div>
+        </header>
+
+        <!-- ALERTA GLOBAL PARA NOTIFICACIONES -->
+        <div id="alerta-global" class="alert alert-dismissible fade d-none mb-3" role="alert">
+            <span id="alerta-mensaje"></span>
+            <button type="button" class="btn-close" onclick="cerrarAlerta()"></button>
         </div>
 
-        <!-- SECCIÓN ADMINISTRADOR: GESTIÓN DE USUARIOS (HU-01) -->
-        <div class="row mb-4">
-            <!-- Formulario Crear / Editar Usuario -->
-            <div class="col-md-4 mb-3">
-                <div class="card shadow-sm border-0">
-                    <div id="usuario-titulo" class="card-header bg-dark text-white fw-bold">
-                        👥 Agregar Usuario
-                    </div>
-                    <div class="card-body">
-                        <form id="form-usuario" onsubmit="guardarUsuario(event)">
-                            <input type="hidden" id="usuario-id">
-                            <div class="mb-2">
-                                <label class="form-label small mb-1">Nombre</label>
-                                <input type="text" id="usuario-nombre" class="form-control" placeholder="Ej: Ana Gómez" required>
-                            </div>
-                            <div class="mb-2">
-                                <label class="form-label small mb-1">Correo</label>
-                                <input type="email" id="usuario-correo" class="form-control" placeholder="Ej: ana@restaurante.com" required>
-                            </div>
-                            <div class="mb-2">
-                                <label class="form-label small mb-1">Contraseña</label>
-                                <input type="password" id="usuario-contrasena" class="form-control" placeholder="Contraseña" autocomplete="new-password" required>
-                            </div>
-                            <div class="mb-2">
-                                <label class="form-label small mb-1">Rol</label>
-                                <select id="usuario-rol" class="form-select" required>
-                                    <option value="mesero">Mesero</option>
-                                    <option value="cocina">Cocina</option>
-                                    <option value="admin">Administrador</option>
-                                </select>
-                            </div>
-                            <button type="submit" id="usuario-guardar" class="btn btn-primary btn-sm w-100 mt-2">Guardar Usuario</button>
-                            <button type="button" id="usuario-cancelar" class="btn btn-outline-secondary btn-sm w-100 mt-2 d-none" onclick="cancelarEdicionUsuario()">Cancelar edición</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
+        <!-- NAVEGACIÓN POR PESTAÑAS (TABS) -->
+        <ul class="nav nav-pills nav-fill mb-4 bg-white p-2 rounded-4 shadow-sm border" id="pills-tab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active fw-semibold" id="tab-mesas-btn" data-bs-toggle="pill" data-bs-target="#tab-mesas" type="button" role="tab">
+                    🪑 Mesas
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link fw-semibold" id="tab-productos-btn" data-bs-toggle="pill" data-bs-target="#tab-productos" type="button" role="tab">
+                    🍔 Menú y Productos
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link fw-semibold" id="tab-categorias-btn" data-bs-toggle="pill" data-bs-target="#tab-categorias" type="button" role="tab">
+                    🏷️ Categorías
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link fw-semibold" id="tab-usuarios-btn" data-bs-toggle="pill" data-bs-target="#tab-usuarios" type="button" role="tab">
+                    👥 Usuarios
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link fw-semibold" id="tab-pedidos-btn" data-bs-toggle="pill" data-bs-target="#tab-pedidos" type="button" role="tab">
+                    📝 Pedidos y Cocina
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link fw-semibold" id="tab-inventario-btn" data-bs-toggle="pill" data-bs-target="#tab-inventario" type="button" role="tab">
+                    📦 Inventario
+                </button>
+            </li>
+        </ul>
 
-            <!-- Lista de Usuarios -->
-            <div class="col-md-8 mb-3">
-                <div class="card shadow-sm border-0">
-                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0 fs-6">Usuarios del Restaurante</h5>
-                        <button onclick="cargarUsuarios()" class="btn btn-sm btn-light">Actualizar</button>
+        <!-- CONTENIDO DE LAS PESTAÑAS -->
+        <div class="tab-content" id="pills-tabContent">
+
+            <!-- ===================== PESTAÑA 1: MESAS ===================== -->
+            <div class="tab-pane fade show active" id="tab-mesas" role="tabpanel">
+                <div class="row">
+                    <!-- Formulario Mesa -->
+                    <div class="col-lg-4 mb-4">
+                        <div class="card shadow-sm border-0">
+                            <div id="mesa-card-header" class="card-header bg-dark text-white fw-bold">
+                                🪑 <span id="mesa-titulo">Agregar Mesa</span>
+                            </div>
+                            <div class="card-body">
+                                <form id="form-mesa" onsubmit="guardarMesa(event)">
+                                    <input type="hidden" id="mesa-id">
+                                    <div class="mb-2">
+                                        <label class="form-label small mb-1">Número de Mesa</label>
+                                        <input type="number" id="mesa-numero" class="form-control" placeholder="Ej: 1" required min="1">
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label small mb-1">Capacidad (personas)</label>
+                                        <input type="number" id="mesa-capacidad" class="form-control" placeholder="Ej: 4" required min="1">
+                                    </div>
+                                    <div class="mb-2" id="grupo-mesa-estado" style="display: none;">
+                                        <label class="form-label small mb-1">Estado</label>
+                                        <select id="mesa-estado" class="form-select">
+                                            <option value="disponible">Disponible</option>
+                                            <option value="ocupada">Ocupada</option>
+                                        </select>
+                                    </div>
+                                    <button type="submit" id="mesa-btn-guardar" class="btn btn-success btn-sm w-100 mt-2">Guardar Mesa</button>
+                                    <button type="button" id="mesa-btn-cancelar" class="btn btn-outline-secondary btn-sm w-100 mt-2 d-none" onclick="cancelarEdicionMesa()">Cancelar edición</button>
+                                </form>
+                                <div class="mt-3 p-2 bg-light rounded text-center small text-muted border">
+                                    <i class="bi bi-info-circle me-1"></i> <strong>Regla del Manager:</strong> Máximo 20 mesas en el restaurante.
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table table-sm align-middle mb-0">
-                                <thead class="table-light">
-                                    <tr><th>ID</th><th>Nombre</th><th>Correo</th><th>Rol</th><th class="text-end">Acciones</th></tr>
-                                </thead>
-                                <tbody id="tabla-usuarios">
-                                    <tr><td colspan="5" class="text-muted text-center py-3">Cargando...</td></tr>
-                                </tbody>
-                            </table>
+
+                    <!-- Lista de Mesas -->
+                    <div class="col-lg-8 mb-4">
+                        <div class="card shadow-sm border-0">
+                            <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0 fs-6">Listado de Mesas (<span id="contador-mesas">0</span>/20)</h5>
+                                <button onclick="cargarMesas()" class="btn btn-sm btn-light">Actualizar</button>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-hover table-sm align-middle mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>Número</th>
+                                                <th>Capacidad</th>
+                                                <th>Estado</th>
+                                                <th class="text-end">Acciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tabla-mesas">
+                                            <tr><td colspan="5" class="text-muted text-center py-3">Cargando mesas...</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <hr class="my-4">
+            <!-- ===================== PESTAÑA 2: PRODUCTOS ===================== -->
+            <div class="tab-pane fade" id="tab-productos" role="tabpanel">
+                <div class="row">
+                    <!-- Formulario Producto -->
+                    <div class="col-lg-4 mb-4">
+                        <div class="card shadow-sm border-0">
+                            <div id="producto-card-header" class="card-header bg-dark text-white fw-bold">
+                                🍔 <span id="producto-titulo">Agregar Producto al Menú</span>
+                            </div>
+                            <div class="card-body">
+                                <form id="form-producto" onsubmit="guardarProducto(event)">
+                                    <input type="hidden" id="prod-id">
+                                    <div class="mb-2">
+                                        <label class="form-label small mb-1">Nombre</label>
+                                        <input type="text" id="prod-nombre" class="form-control" placeholder="Ej: Hamburguesa Especial" required>
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label small mb-1">Precio ($)</label>
+                                        <input type="number" step="0.01" id="prod-precio" class="form-control" placeholder="Ej: 15000" required min="0">
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label small mb-1">Categoría</label>
+                                        <select id="prod-categoria-select" class="form-select" required>
+                                            <option value="">Cargando categorías...</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label small mb-1">Descripción</label>
+                                        <textarea id="prod-descripcion" class="form-control" rows="2" placeholder="Ingredientes o detalles..."></textarea>
+                                    </div>
+                                    <div class="form-check form-switch mb-2">
+                                        <input class="form-check-input" type="checkbox" id="prod-disponibilidad" checked>
+                                        <label class="form-check-label small" for="prod-disponibilidad">Disponible para venta</label>
+                                    </div>
+                                    <button type="submit" id="prod-btn-guardar" class="btn btn-primary btn-sm w-100 mt-2">Guardar Producto</button>
+                                    <button type="button" id="prod-btn-cancelar" class="btn btn-outline-secondary btn-sm w-100 mt-2 d-none" onclick="cancelarEdicionProducto()">Cancelar edición</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
 
-        <!-- SECCIÓN MESERO: CONSULTA DE DATOS -->
-        <div class="row">
-            <!-- Vista Menú -->
-            <div class="col-md-6 mb-4">
-                <div class="card shadow-sm border-0">
-                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0 fs-6">Menú del Restaurante</h5>
-                        <button onclick="cargarMenu()" class="btn btn-sm btn-light">Actualizar</button>
-                    </div>
-                    <div class="card-body">
-                        <ul id="lista-menu" class="list-group list-group-flush">
-                            <li class="list-group-item text-muted text-center py-3">Haz clic en "Actualizar" o guarda un producto.</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Vista Mesas -->
-            <div class="col-md-6 mb-4">
-                <div class="card shadow-sm border-0">
-                    <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0 fs-6">Estado de Mesas</h5>
-                        <button onclick="cargarMesas()" class="btn btn-sm btn-light">Actualizar</button>
-                    </div>
-                    <div class="card-body">
-                        <div id="grid-mesas" class="row g-2">
-                            <div class="col-12 text-muted text-center py-3">Haz clic en "Actualizar" o guarda una mesa.</div>
+                    <!-- Lista de Productos -->
+                    <div class="col-lg-8 mb-4">
+                        <div class="card shadow-sm border-0">
+                            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0 fs-6">Gestión de Productos del Menú</h5>
+                                <button onclick="cargarProductos()" class="btn btn-sm btn-light">Actualizar</button>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-hover table-sm align-middle mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>Nombre</th>
+                                                <th>Precio</th>
+                                                <th>Categoría</th>
+                                                <th>Estado</th>
+                                                <th class="text-end">Acciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tabla-productos">
+                                            <tr><td colspan="6" class="text-muted text-center py-3">Cargando productos...</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
 
+            <!-- ===================== PESTAÑA 3: CATEGORÍAS ===================== -->
+            <div class="tab-pane fade" id="tab-categorias" role="tabpanel">
+                <div class="row">
+                    <!-- Formulario Categoría -->
+                    <div class="col-lg-4 mb-4">
+                        <div class="card shadow-sm border-0">
+                            <div class="card-header bg-dark text-white fw-bold">
+                                🏷️ <span id="categoria-titulo">Agregar Categoría</span>
+                            </div>
+                            <div class="card-body">
+                                <form id="form-categoria" onsubmit="guardarCategoria(event)">
+                                    <input type="hidden" id="cat-id">
+                                    <div class="mb-2">
+                                        <label class="form-label small mb-1">Nombre de la Categoría</label>
+                                        <input type="text" id="cat-nombre" class="form-control" placeholder="Ej: Bebidas, Postres, Platos Fuertes" required>
+                                    </div>
+                                    <button type="submit" id="cat-btn-guardar" class="btn btn-primary btn-sm w-100 mt-2">Guardar Categoría</button>
+                                    <button type="button" id="cat-btn-cancelar" class="btn btn-outline-secondary btn-sm w-100 mt-2 d-none" onclick="cancelarEdicionCategoria()">Cancelar edición</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Lista de Categorías -->
+                    <div class="col-lg-8 mb-4">
+                        <div class="card shadow-sm border-0">
+                            <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0 fs-6">Categorías Registradas</h5>
+                                <button onclick="cargarCategorias()" class="btn btn-sm btn-light">Actualizar</button>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-hover table-sm align-middle mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>Nombre</th>
+                                                <th class="text-end">Acciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tabla-categorias">
+                                            <tr><td colspan="3" class="text-muted text-center py-3">Cargando categorías...</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===================== PESTAÑA 4: USUARIOS ===================== -->
+            <div class="tab-pane fade" id="tab-usuarios" role="tabpanel">
+                <div class="row">
+                    <!-- Formulario Usuario -->
+                    <div class="col-lg-4 mb-4">
+                        <div class="card shadow-sm border-0">
+                            <div id="usuario-titulo" class="card-header bg-dark text-white fw-bold">
+                                👥 Agregar Usuario
+                            </div>
+                            <div class="card-body">
+                                <form id="form-usuario" onsubmit="guardarUsuario(event)">
+                                    <input type="hidden" id="usuario-id">
+                                    <div class="mb-2">
+                                        <label class="form-label small mb-1">Nombre</label>
+                                        <input type="text" id="usuario-nombre" class="form-control" placeholder="Ej: Ana Gómez" required>
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label small mb-1">Correo</label>
+                                        <input type="email" id="usuario-correo" class="form-control" placeholder="Ej: ana@restaurante.com" required>
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label small mb-1">Contraseña</label>
+                                        <input type="password" id="usuario-contrasena" class="form-control" placeholder="Contraseña" autocomplete="new-password" required>
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label small mb-1">Rol</label>
+                                        <select id="usuario-rol" class="form-select" required>
+                                            <option value="mesero">Mesero</option>
+                                            <option value="cocina">Cocina</option>
+                                            <option value="admin">Administrador</option>
+                                        </select>
+                                    </div>
+                                    <button type="submit" id="usuario-guardar" class="btn btn-primary btn-sm w-100 mt-2">Guardar Usuario</button>
+                                    <button type="button" id="usuario-cancelar" class="btn btn-outline-secondary btn-sm w-100 mt-2 d-none" onclick="cancelarEdicionUsuario()">Cancelar edición</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Lista de Usuarios -->
+                    <div class="col-lg-8 mb-4">
+                        <div class="card shadow-sm border-0">
+                            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0 fs-6">Usuarios del Restaurante</h5>
+                                <button onclick="cargarUsuarios()" class="btn btn-sm btn-light">Actualizar</button>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-hover table-sm align-middle mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>Nombre</th>
+                                                <th>Correo</th>
+                                                <th>Rol</th>
+                                                <th class="text-end">Acciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tabla-usuarios">
+                                            <tr><td colspan="5" class="text-muted text-center py-3">Cargando usuarios...</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===================== PESTAÑA 5: PEDIDOS Y COCINA ===================== -->
+            <div class="tab-pane fade" id="tab-pedidos" role="tabpanel">
+                <div class="row">
+                    <!-- Formulario Crear Pedido -->
+                    <div class="col-lg-4 mb-4">
+                        <div class="card shadow-sm border-0">
+                            <div class="card-header bg-dark text-white fw-bold">
+                                📝 Nuevo Pedido
+                            </div>
+                            <div class="card-body">
+                                <form id="form-pedido" onsubmit="crearPedido(event)">
+                                    <div class="mb-2">
+                                        <label class="form-label small mb-1">Tipo de Pedido</label>
+                                        <select id="pedido-tipo" class="form-select" onchange="toggleMesaRequerida()">
+                                            <option value="salon">Para Salón</option>
+                                            <option value="para_llevar">Para Llevar</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-2" id="grupo-pedido-mesa">
+                                        <label class="form-label small mb-1">Mesa Asignada</label>
+                                        <select id="pedido-mesa-select" class="form-select">
+                                            <option value="">Cargando mesas disponibles...</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label small mb-1">Mesero que atiende</label>
+                                        <select id="pedido-mesero-select" class="form-select" required>
+                                            <option value="">Cargando meseros...</option>
+                                        </select>
+                                    </div>
+                                    <button type="submit" class="btn btn-success btn-sm w-100 mt-2">Crear Pedido</button>
+                                </form>
+                                <div class="mt-3 p-2 bg-light rounded text-center small text-muted border">
+                                    <i class="bi bi-arrow-repeat me-1"></i> <strong>Interacción de Entidades:</strong> Al crear un pedido de salón, la mesa pasa automáticamente a <em>Ocupada</em>. Al entregarlo o cancelarlo, se libera a <em>Disponible</em>.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Lista de Pedidos -->
+                    <div class="col-lg-8 mb-4">
+                        <div class="card shadow-sm border-0">
+                            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0 fs-6">Control de Pedidos y Cocina</h5>
+                                <div class="d-flex gap-2">
+                                    <select id="filtro-pedidos-estado" class="form-select form-select-sm" style="width: auto;" onchange="cargarPedidos()">
+                                        <option value="">Todos los estados</option>
+                                        <option value="PENDIENTE">Pendientes</option>
+                                        <option value="EN PREPARACIÓN">En preparación</option>
+                                        <option value="LISTO">Listos</option>
+                                        <option value="ENTREGADO">Entregados</option>
+                                        <option value="CANCELADO">Cancelados</option>
+                                    </select>
+                                    <button onclick="cargarPedidos()" class="btn btn-sm btn-light">Actualizar</button>
+                                </div>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-hover table-sm align-middle mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>Mesa</th>
+                                                <th>Tipo</th>
+                                                <th>Estado</th>
+                                                <th class="text-end">Cambiar Estado (Cocina/Mesero)</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tabla-pedidos">
+                                            <tr><td colspan="5" class="text-muted text-center py-3">Cargando pedidos...</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===================== PESTAÑA 6: INVENTARIO ===================== -->
+            <div class="tab-pane fade" id="tab-inventario" role="tabpanel">
+                <div class="row">
+                    <!-- Formulario Inventario -->
+                    <div class="col-lg-4 mb-4">
+                        <div class="card shadow-sm border-0">
+                            <div class="card-header bg-dark text-white fw-bold">
+                                📦 <span id="inv-titulo">Agregar Insumo</span>
+                            </div>
+                            <div class="card-body">
+                                <form id="form-inventario" onsubmit="guardarInventario(event)">
+                                    <input type="hidden" id="inv-id">
+                                    <div class="mb-2">
+                                        <label class="form-label small mb-1">Nombre del Insumo</label>
+                                        <input type="text" id="inv-nombre" class="form-control" placeholder="Ej: Carne de Res, Tomate, Harina" required>
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label small mb-1">Cantidad</label>
+                                        <input type="number" step="0.01" id="inv-cantidad" class="form-control" placeholder="Ej: 25.5" required min="0">
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label small mb-1">Unidad de Medida</label>
+                                        <input type="text" id="inv-unidad" class="form-control" placeholder="Ej: kg, litros, gramos, unidades" required>
+                                    </div>
+                                    <button type="submit" id="inv-btn-guardar" class="btn btn-primary btn-sm w-100 mt-2">Guardar Insumo</button>
+                                    <button type="button" id="inv-btn-cancelar" class="btn btn-outline-secondary btn-sm w-100 mt-2 d-none" onclick="cancelarEdicionInventario()">Cancelar edición</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Lista de Inventario -->
+                    <div class="col-lg-8 mb-4">
+                        <div class="card shadow-sm border-0">
+                            <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0 fs-6 fw-bold">Existencias en Inventario</h5>
+                                <button onclick="cargarInventario()" class="btn btn-sm btn-dark">Actualizar</button>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-hover table-sm align-middle mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>Insumo</th>
+                                                <th>Cantidad</th>
+                                                <th>Unidad</th>
+                                                <th class="text-end">Acciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tabla-inventario">
+                                            <tr><td colspan="5" class="text-muted text-center py-3">Cargando inventario...</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div> <!-- /tab-content -->
+
+    </div> <!-- /container -->
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Script JavaScript Modular -->
     <script src="/static/app.js"></script>
 </body>

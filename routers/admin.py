@@ -12,6 +12,7 @@ from models.Product_Category import Product, ProductCategory
 from models.Table import Table
 from models.User import RolUsuario, User
 from security import hash_password
+from manager import RestaurantManager
 
 router = APIRouter(prefix="/admin", tags=["Administrador"])
 
@@ -105,10 +106,7 @@ def delete_user(user_id: int, session: Session = Depends(get_session)):
 # ---------- MESAS ----------
 @router.post("/tables", response_model=Table, status_code=status.HTTP_201_CREATED)
 def create_table(table: Table, session: Session = Depends(get_session)):
-    if session.exec(select(Table).where(Table.numero == table.numero)).first():
-        raise HTTPException(status_code=400, detail="El número de mesa ya está registrado")
-    table.id = None
-    return save(session, table)
+    return RestaurantManager.crear_mesa(session, table.numero, table.capacidad, table.estado)
 
 
 @router.get("/tables", response_model=list[Table])
