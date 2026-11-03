@@ -10,7 +10,6 @@ from models.Order_Detail import OrderDetail
 from models.Product_Category import Product
 from models.Table import Table
 from models.User import User
-from manager import RestaurantManager
 
 router = APIRouter(prefix="/mesero", tags=["Mesero"])
 
@@ -84,7 +83,13 @@ def get_tables(session: Session = Depends(get_session)):
 # ---------- CRUD de pedidos ----------
 @router.post("/orders", response_model=Order, status_code=status.HTTP_201_CREATED)
 def create_order(data: OrderCreate, session: Session = Depends(get_session)):
-    return RestaurantManager.crear_pedido_con_mesa(session, data.mesa_id, data.mesero_id, data.tipo_pedido)
+    validate_order_refs(session, data.mesa_id, data.mesero_id, data.tipo_pedido)
+    order = Order(mesa_id=data.mesa_id, mesero_id=data.mesero_id,
+                  tipo_pedido=data.tipo_pedido, estado=EstadoPedido.PENDIENTE)
+    session.add(order)
+    session.commit()
+    session.refresh(order)
+    return order
 
 
 @router.get("/orders", response_model=list[Order])
