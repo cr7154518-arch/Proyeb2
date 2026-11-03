@@ -5,6 +5,7 @@ from sqlmodel import Session, select
 
 from DataBase import get_session
 from models.Order import EstadoPedido, Order
+from manager import RestaurantManager
 
 router = APIRouter(prefix="/cocina", tags=["Cocina"])
 
@@ -24,12 +25,4 @@ def get_pending_orders(session: Session = Depends(get_session)):
 
 @router.put("/orders/{order_id}/status", response_model=Order)
 def update_order_status(order_id: int, estado: EstadoPedido, session: Session = Depends(get_session)):
-    order = session.get(Order, order_id)
-    if not order:
-        raise HTTPException(status_code=404, detail="Pedido no encontrado")
-    order.estado = estado
-    order.fecha_ultima_actualizacion = datetime.now(timezone.utc)
-    session.add(order)
-    session.commit()
-    session.refresh(order)
-    return order
+    return RestaurantManager.actualizar_estado_pedido(session, order_id, estado)
