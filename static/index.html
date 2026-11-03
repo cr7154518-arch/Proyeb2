@@ -439,6 +439,26 @@
     </main>
 
     <!-- ======================================================== -->
+    <!-- MODAL EMERGENTE: CONSULTA DE DETALLES INDIVIDUALES       -->
+    <!-- ======================================================== -->
+    <div class="modal fade" id="modalDetalleGenerico" tabindex="-1" aria-labelledby="modalDetalleTitulo" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow border-0">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title fs-6 fw-bold" id="modalDetalleTitulo">🔍 Detalle del Registro</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-3" id="modalDetalleCuerpo">
+                    <!-- Contenido dinámico inyectado por mostrarModalDetalle -->
+                </div>
+                <div class="modal-footer py-2">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ======================================================== -->
     <!-- MODAL EMERGENTE: ÍTEMS DEL PEDIDO (MESERO)               -->
     <!-- ======================================================== -->
     <div class="modal fade" id="modalItemsPedido" tabindex="-1" aria-labelledby="modalItemsPedidoLabel" aria-hidden="true">

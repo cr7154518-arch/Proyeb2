@@ -69,3 +69,33 @@ function notifyError(mensaje) {
     alert("❌ " + mensaje);
 }
 
+/**
+ * Modal genérico para consultar detalles individuales (Opción 2)
+ */
+let modalDetalleInstance = null;
+
+function mostrarModalDetalle(titulo, campos) {
+    const tituloEl = document.getElementById("modalDetalleTitulo");
+    const cuerpoEl = document.getElementById("modalDetalleCuerpo");
+    if (!tituloEl || !cuerpoEl) return;
+
+    tituloEl.textContent = titulo;
+    cuerpoEl.innerHTML = `
+        <table class="table table-bordered table-striped mb-0">
+            <tbody>
+                ${campos.map(([clave, valor]) => `
+                    <tr>
+                        <th style="width: 35%;">${esc(clave)}</th>
+                        <td>${valor}</td>
+                    </tr>
+                `).join("")}
+            </tbody>
+        </table>
+    `;
+
+    if (!modalDetalleInstance && window.bootstrap) {
+        const el = document.getElementById("modalDetalleGenerico");
+        if (el) modalDetalleInstance = new bootstrap.Modal(el);
+    }
+    if (modalDetalleInstance) modalDetalleInstance.show();
+}

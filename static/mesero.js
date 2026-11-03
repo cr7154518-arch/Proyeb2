@@ -90,6 +90,7 @@ async function cargarPedidos() {
                     <td><span class="badge ${ESTADO_BADGES[p.estado] || "bg-secondary"}">${esc(p.estado)}</span></td>
                     <td><small class="text-muted">${fecha}</small></td>
                     <td class="text-end text-nowrap">
+                        <button class="btn btn-outline-info btn-sm me-1" onclick="consultarPedido(${p.id})" title="Ver detalle del pedido">🔍 Ver</button>
                         <button class="btn btn-outline-success btn-sm me-1" onclick="abrirModalItems(${p.id})">🍽️ Ítems</button>
                         <button class="btn btn-outline-primary btn-sm me-1" onclick="editarPedido(${p.id})">Editar</button>
                         <button class="btn btn-outline-danger btn-sm" onclick="eliminarPedido(${p.id})">Eliminar</button>
@@ -99,6 +100,45 @@ async function cargarPedidos() {
         }).join("");
     } catch (err) {
         tbody.innerHTML = `<tr><td colspan="7" class="text-danger text-center py-3">Error al cargar pedidos: ${esc(err.message)}</td></tr>`;
+    }
+}
+
+async function consultarPedido(id) {
+    try {
+        const p = await apiFetch(`/mesero/orders/${id}`);
+        const items = await apiFetch(`/mesero/orders/${id}/items`);
+        const total = items.reduce((acc, it) => acc + (Number(it.precio_unitario) * it.cantidad), 0);
+
+        const fechaCreacion = p.fecha_creacion ? new Date(p.fecha_creacion).toLocaleString() : "-";
+        const fechaAct = p.fecha_ultima_actualizacion ? new Date(p.fecha_ultima_actualizacion).toLocaleString() : "-";
+
+        let listaProds = items.length === 0 ? "<em>Sin ítems asociados</em>" : `
+            <ul class="list-group list-group-sm mt-1">
+                ${items.map(it => {
+                    const prod = productosMenuCache.find(x => x.id === it.product_id);
+                    const nom = prod ? prod.nombre : `Producto #${it.product_id}`;
+                    const sub = Number(it.precio_unitario) * it.cantidad;
+                    return `<li class="list-group-item d-flex justify-content-between align-items-center py-1">
+                        <span><strong>${it.cantidad}x</strong> ${esc(nom)}</span>
+                        <span>$${sub.toFixed(2)}</span>
+                    </li>`;
+                }).join("")}
+            </ul>
+        `;
+
+        mostrarModalDetalle(`Detalle Completo del Pedido #${p.id}`, [
+            ["ID del Pedido", `<code>#${p.id}</code>`],
+            ["Tipo de Pedido", `<span class="badge bg-light text-dark border">${esc(p.tipo_pedido)}</span>`],
+            ["Mesa asignada", p.mesa_id ? `Mesa #${p.mesa_id}` : `<em>Para llevar</em>`],
+            ["Mesero asignado", `Usuario ID #${p.mesero_id}`],
+            ["Estado actual", `<span class="badge ${ESTADO_BADGES[p.estado] || "bg-secondary"}">${esc(p.estado)}</span>`],
+            ["Fecha creación", fechaCreacion],
+            ["Última actualización", fechaAct],
+            ["Ítems del pedido", listaProds],
+            ["Total a pagar", `<strong class="fs-6 text-primary">$${total.toFixed(2)}</strong>`]
+        ]);
+    } catch (err) {
+        notifyError("Error al consultar pedido: " + err.message);
     }
 }
 
@@ -239,8 +279,9 @@ async function cargarItemsDelPedido(orderId) {
                     <td><span class="badge bg-light text-dark border px-2 py-1">${it.cantidad}</span></td>
                     <td><strong>$${subtotal.toFixed(2)}</strong></td>
                     <td class="text-end text-nowrap">
-                        <button class="btn btn-outline-primary btn-sm py-0 px-2" onclick="editarItemPedido(${it.id}, ${it.product_id}, ${it.cantidad})">✏️</button>
-                        <button class="btn btn-outline-danger btn-sm py-0 px-2" onclick="eliminarItemPedido(${it.id})">🗑️</button>
+                        <button class="btn btn-outline-info btn-sm py-0 px-2 me-1" onclick="consultarItemIndividual(${orderId}, ${it.id})" title="Consultar ítem">🔍</button>
+                        <button class="btn btn-outline-primary btn-sm py-0 px-2 me-1" onclick="editarItemPedido(${it.id}, ${it.product_id}, ${it.cantidad})" title="Editar cantidad">✏️</button>
+                        <button class="btn btn-outline-danger btn-sm py-0 px-2" onclick="eliminarItemPedido(${it.id})" title="Eliminar ítem">🗑️</button>
                     </td>
                 </tr>
             `;
@@ -249,6 +290,26 @@ async function cargarItemsDelPedido(orderId) {
         if (totalEl) totalEl.textContent = `$${total.toFixed(2)}`;
     } catch (err) {
         tbody.innerHTML = `<tr><td colspan="5" class="text-danger text-center py-3">Error al cargar ítems: ${esc(err.message)}</td></tr>`;
+    }
+}
+
+async function consultarItemIndividual(orderId, itemId) {
+    try {
+        const it = await apiFetch(`/mesero/orders/${orderId}/items/${itemId}`);
+        const prod = productosMenuCache.find(x => x.id === it.product_id);
+        const nom = prod ? prod.nombre : `Producto #${it.product_id}`;
+        const sub = Number(it.precio_unitario) * it.cantidad;
+
+        mostrarModalDetalle(`Detalle del Ítem #${it.id}`, [
+            ["ID del Ítem", `<code>#${it.id}</code>`],
+            ["Pedido N°", `<code>#${it.order_id}</code>`],
+            ["Producto", `<strong>${esc(nom)}</strong> (ID #${it.product_id})`],
+            ["Cantidad", `${it.cantidad} unidades`],
+            ["Precio Unitario", `$${Number(it.precio_unitario).toFixed(2)}`],
+            ["Subtotal", `<strong class="text-success">$${sub.toFixed(2)}</strong>`]
+        ]);
+    } catch (err) {
+        notifyError("Error al consultar ítem: " + err.message);
     }
 }
 
@@ -316,4 +377,3 @@ function initMeseroModule() {
     cargarMenuMesero();
     cargarPedidos();
 }
-

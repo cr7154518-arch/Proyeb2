@@ -28,13 +28,28 @@ async function cargarUsuarios() {
                 <td>${esc(u.correo)}</td>
                 <td><span class="badge ${ROL_BADGES[u.rol] || "bg-secondary"}">${esc(u.rol)}</span></td>
                 <td class="text-end text-nowrap">
-                    <button class="btn btn-outline-primary btn-sm" onclick="editarUsuario(${u.id})">Editar</button>
+                    <button class="btn btn-outline-info btn-sm me-1" onclick="consultarUsuario(${u.id})" title="Ver detalle">🔍 Ver</button>
+                    <button class="btn btn-outline-primary btn-sm me-1" onclick="editarUsuario(${u.id})">Editar</button>
                     <button class="btn btn-outline-danger btn-sm" onclick="eliminarUsuario(${u.id})">Eliminar</button>
                 </td>
             </tr>
         `).join("");
     } catch (err) {
         tbody.innerHTML = `<tr><td colspan="5" class="text-danger text-center py-3">No se pudieron cargar los usuarios: ${esc(err.message)}</td></tr>`;
+    }
+}
+
+async function consultarUsuario(id) {
+    try {
+        const u = await apiFetch(`/admin/users/${id}`);
+        mostrarModalDetalle(`Ficha de Usuario #${u.id}`, [
+            ["ID del Usuario", `<code>#${u.id}</code>`],
+            ["Nombre Completo", `<strong>${esc(u.nombre)}</strong>`],
+            ["Correo Electrónico", `<a href="mailto:${esc(u.correo)}">${esc(u.correo)}</a>`],
+            ["Rol en el Sistema", `<span class="badge ${ROL_BADGES[u.rol] || "bg-secondary"}">${esc(u.rol)}</span>`]
+        ]);
+    } catch (err) {
+        notifyError("Error al consultar usuario: " + err.message);
     }
 }
 
@@ -136,7 +151,8 @@ async function cargarCategorias() {
                     <td><strong>#${c.id}</strong></td>
                     <td>${esc(c.nombre)}</td>
                     <td class="text-end text-nowrap">
-                        <button class="btn btn-outline-primary btn-sm" onclick="editarCategoria(${c.id})">Editar</button>
+                        <button class="btn btn-outline-info btn-sm me-1" onclick="consultarCategoria(${c.id})" title="Ver detalle">🔍 Ver</button>
+                        <button class="btn btn-outline-primary btn-sm me-1" onclick="editarCategoria(${c.id})">Editar</button>
                         <button class="btn btn-outline-danger btn-sm" onclick="eliminarCategoria(${c.id})">Eliminar</button>
                     </td>
                 </tr>
@@ -144,6 +160,18 @@ async function cargarCategorias() {
         }
     } catch (err) {
         if (tbody) tbody.innerHTML = `<tr><td colspan="3" class="text-danger text-center py-3">Error al cargar categorías: ${esc(err.message)}</td></tr>`;
+    }
+}
+
+async function consultarCategoria(id) {
+    try {
+        const c = await apiFetch(`/admin/categories/${id}`);
+        mostrarModalDetalle(`Ficha de Categoría #${c.id}`, [
+            ["ID de Categoría", `<code>#${c.id}</code>`],
+            ["Nombre de Categoría", `<strong>${esc(c.nombre)}</strong>`]
+        ]);
+    } catch (err) {
+        notifyError("Error al consultar categoría: " + err.message);
     }
 }
 
@@ -224,7 +252,8 @@ async function cargarProductos() {
                     <td><small class="text-muted">${esc(p.descripcion || "Sin descripción")}</small></td>
                     <td><span class="badge ${p.disponibilidad ? "bg-success" : "bg-secondary"}">${p.disponibilidad ? "Disponible" : "Agotado"}</span></td>
                     <td class="text-end text-nowrap">
-                        <button class="btn btn-outline-primary btn-sm" onclick="editarProducto(${p.id})">Editar</button>
+                        <button class="btn btn-outline-info btn-sm me-1" onclick="consultarProducto(${p.id})" title="Ver detalle">🔍 Ver</button>
+                        <button class="btn btn-outline-primary btn-sm me-1" onclick="editarProducto(${p.id})">Editar</button>
                         <button class="btn btn-outline-danger btn-sm" onclick="eliminarProducto(${p.id})">Eliminar</button>
                     </td>
                 </tr>
@@ -232,6 +261,24 @@ async function cargarProductos() {
         }).join("");
     } catch (err) {
         tbody.innerHTML = `<tr><td colspan="7" class="text-danger text-center py-3">Error al cargar productos: ${esc(err.message)}</td></tr>`;
+    }
+}
+
+async function consultarProducto(id) {
+    try {
+        const p = await apiFetch(`/admin/products/${id}`);
+        const cat = categoriasCache.find(c => c.id === p.categoria_id);
+        const catNombre = cat ? cat.nombre : `Categoría #${p.categoria_id}`;
+        mostrarModalDetalle(`Ficha de Producto #${p.id}`, [
+            ["ID de Producto", `<code>#${p.id}</code>`],
+            ["Nombre", `<strong>${esc(p.nombre)}</strong>`],
+            ["Precio Unitario", `<strong>$${Number(p.precio).toFixed(2)}</strong>`],
+            ["Categoría", `<span class="badge bg-light text-dark border">${esc(catNombre)}</span>`],
+            ["Descripción", esc(p.descripcion || "Sin descripción")],
+            ["Estado / Disponibilidad", `<span class="badge ${p.disponibilidad ? "bg-success" : "bg-secondary"}">${p.disponibilidad ? "Disponible para pedir" : "Agotado"}</span>`]
+        ]);
+    } catch (err) {
+        notifyError("Error al consultar producto: " + err.message);
     }
 }
 
@@ -326,13 +373,28 @@ async function cargarMesasAdmin() {
                 <td>${m.capacidad} personas</td>
                 <td><span class="badge ${m.estado === "disponible" ? "bg-success" : "bg-warning text-dark"}">${esc(m.estado || "disponible")}</span></td>
                 <td class="text-end text-nowrap">
-                    <button class="btn btn-outline-primary btn-sm" onclick="editarMesa(${m.id})">Editar</button>
+                    <button class="btn btn-outline-info btn-sm me-1" onclick="consultarMesa(${m.id})" title="Ver detalle">🔍 Ver</button>
+                    <button class="btn btn-outline-primary btn-sm me-1" onclick="editarMesa(${m.id})">Editar</button>
                     <button class="btn btn-outline-danger btn-sm" onclick="eliminarMesa(${m.id})">Eliminar</button>
                 </td>
             </tr>
         `).join("");
     } catch (err) {
         tbody.innerHTML = `<tr><td colspan="5" class="text-danger text-center py-3">Error al cargar mesas: ${esc(err.message)}</td></tr>`;
+    }
+}
+
+async function consultarMesa(id) {
+    try {
+        const m = await apiFetch(`/admin/tables/${id}`);
+        mostrarModalDetalle(`Ficha de Mesa #${m.numero}`, [
+            ["ID interno", `<code>#${m.id}</code>`],
+            ["Número de Mesa", `<strong>Mesa ${m.numero}</strong>`],
+            ["Capacidad", `${m.capacidad} comensales`],
+            ["Estado actual", `<span class="badge ${m.estado === "disponible" ? "bg-success" : "bg-warning text-dark"}">${esc(m.estado || "disponible")}</span>`]
+        ]);
+    } catch (err) {
+        notifyError("Error al consultar mesa: " + err.message);
     }
 }
 
@@ -419,13 +481,28 @@ async function cargarInventario() {
                 <td>${Number(i.cantidad).toFixed(2)}</td>
                 <td><span class="badge bg-secondary">${esc(i.unidad_medida)}</span></td>
                 <td class="text-end text-nowrap">
-                    <button class="btn btn-outline-primary btn-sm" onclick="editarInsumo(${i.id})">Editar</button>
+                    <button class="btn btn-outline-info btn-sm me-1" onclick="consultarInventario(${i.id})" title="Ver detalle">🔍 Ver</button>
+                    <button class="btn btn-outline-primary btn-sm me-1" onclick="editarInsumo(${i.id})">Editar</button>
                     <button class="btn btn-outline-danger btn-sm" onclick="eliminarInsumo(${i.id})">Eliminar</button>
                 </td>
             </tr>
         `).join("");
     } catch (err) {
         tbody.innerHTML = `<tr><td colspan="5" class="text-danger text-center py-3">Error al cargar inventario: ${esc(err.message)}</td></tr>`;
+    }
+}
+
+async function consultarInventario(id) {
+    try {
+        const i = await apiFetch(`/admin/inventory/${id}`);
+        mostrarModalDetalle(`Ficha de Insumo #${i.id}`, [
+            ["ID de Insumo", `<code>#${i.id}</code>`],
+            ["Nombre del Insumo", `<strong>${esc(i.nombre_insumo)}</strong>`],
+            ["Cantidad en Stock", `<strong>${Number(i.cantidad).toFixed(2)}</strong>`],
+            ["Unidad de Medida", `<span class="badge bg-secondary">${esc(i.unidad_medida)}</span>`]
+        ]);
+    } catch (err) {
+        notifyError("Error al consultar insumo: " + err.message);
     }
 }
 
