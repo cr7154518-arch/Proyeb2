@@ -11,6 +11,53 @@ const ROL_BADGES = {
     mesero: "bg-success"
 };
 
+// ===================== BUSCADOR GLOBAL / POR ID =====================
+async function buscarPorIdDirecto(e) {
+    if (e) e.preventDefault();
+    const entidad = document.getElementById("consulta-entidad").value;
+    const idVal = document.getElementById("consulta-id-input").value.trim();
+
+    if (!idVal) {
+        notifyError("Por favor ingresa un ID numérico a consultar.");
+        return;
+    }
+
+    const id = parseInt(idVal);
+    if (isNaN(id) || id <= 0) {
+        notifyError("El ID debe ser un número entero positivo.");
+        return;
+    }
+
+    try {
+        switch (entidad) {
+            case "usuario":
+                await consultarUsuario(id);
+                break;
+            case "producto":
+                await consultarProducto(id);
+                break;
+            case "categoria":
+                await consultarCategoria(id);
+                break;
+            case "mesa":
+                await consultarMesa(id);
+                break;
+            case "inventario":
+                await consultarInventario(id);
+                break;
+            case "pedido":
+                if (typeof consultarPedido === "function") {
+                    await consultarPedido(id);
+                }
+                break;
+            default:
+                notifyError("Entidad no reconocida.");
+        }
+    } catch (err) {
+        notifyError(`No se encontró ningún ${entidad} con el ID #${id}: ${err.message}`);
+    }
+}
+
 // ===================== USUARIOS =====================
 async function cargarUsuarios() {
     const tbody = document.getElementById("tabla-usuarios");
