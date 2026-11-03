@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Administración · PoliRestaurante</title>
+<link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+<main class="main">
+  <header class="head"><div><h1>Administración</h1><p class="sub">Mesas, menú, usuarios e inventario del restaurante.</p></div></header>
+  <div class="tabs" id="tabs" role="tablist"></div>
+  <section id="vista"></section>
+  <dialog id="dlg"></dialog>
+</main>
+<script src="/static/core.js"></script>
+<script>
+shell("admin");
+let cats = [];
+const ROLES = [["mesero", "Mesero"], ["cocina", "Cocina"], ["admin", "Administrador"]];
+const catOpts = () => cats.map(c => [c.id, c.nombre]);
+// cols: [clave, título, formato?]  fields: [clave, etiqueta, tipo, opciones?, obligatorio?]
+const SEC = {
+  resumen: { t: "Resumen" },
+  mesas: { t: "Mesas", path: "/admin/tables", nuevo: "Nueva mesa", vacio: "No hay mesas. Crea la primera (máximo 20).",
+    cols: [["numero", "Número"], ["capacidad", "Capacidad"], ["estado", "Estado", r => `<span class="chip ${r.estado === "ocupada" ? "prep" : "listo"}">${esc(r.estado)}</span>`]],
+    fields: [["numero", "Número de mesa", "number", null, 1], ["capacidad", "Capacidad (personas)", "number", null, 1], ["estado", "Estado", "select", () => [["disponible", "Disponible"], ["ocupada", "Ocupada"]], 1]] },
+  productos: { t: "Menú", path: "/admin/products", nuevo: "Nuevo producto", vacio: "El menú está vacío. Agrega el primer producto.",
+    cols: [["nombre", "Producto"], ["categoria_id", "Categoría", r => esc(cats.find(c => c.id === r.categoria_id)?.nombre ?? "—")], ["precio", "Precio", r => money(r.precio)],
+      ["disponibilidad", "Disponibilidad", r => `<span class="chip ${r.disponibilidad ? "listo" : "canc"}">${r.disponibilidad ? "Disponible" : "Agotado"}</span>`]],
+    fields: [["nombre", "Nombre", "text", null, 1], ["descripcion", "Descripción", "text"], ["precio", "Precio", "number", null, 1], ["categoria_id", "Categoría", "snum", catOpts, 1], ["disponibilidad", "Disponible para pedir", "checkbox"]] },
+  categorias: { t: "Categorías", path: "/admin/categories", nuevo: "Nueva categoría", vacio: "Sin categorías todavía.",
+    cols: [["nombre", "Nombre"]], fields: [["nombre", "Nombre", "text", null, 1]] },
+  usuarios: { t: "Usuarios", path: "/admin/users", nuevo: "Nuevo usuario", vacio: "No hay usuarios.",
+    cols: [["nombre", "Nombre"], ["correo", "Correo"], ["rol", "Rol", r => esc(ROLES.find(x => x[0] === r.rol)?.[1] ?? r.rol)]],
+    fields: [["nombre", "Nombre", "text", null, 1], ["correo", "Correo", "email", null, 1], ["contrasena", "Contraseña", "password", null, 1], ["rol", "Rol", "select", () => ROLES, 1]] },
+  inventario: { t: "Inventario", path: "/admin/inventory", nuevo: "Nuevo insumo", vacio: "No hay insumos registrados.",
+    cols: [["nombre_insumo", "Insumo"], ["cantidad", "Cantidad"], ["unidad_medida", "Unidad"]],
+    fields: [["nombre_insumo", "Insumo", "text", null, 1], ["cantidad", "Cantidad", "number", null, 1], ["unidad_medida", "Unidad (kg, litros, unidades)", "text", null, 1]] },
+};
+const vista = $("#vista"), dlg = $("#dlg");
+let actual = "resumen";
+
+$("#tabs").innerHTML = Object.entries(SEC).map(([k, s]) => `<button role="tab" data-t="${k}">${s.t}</button>`).join("");
+$("#tabs").onclick = e => { const b = e.target.closest("[data-t]"); if (b) ir(b.dataset.t); };
+
+async function ir(id) {
+  if (!SEC[id]) id = "resumen";
+  actual = id; location.hash = id;
+  document.querySelectorAll("#tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.t === id));
+  try { id === "resumen" ? await resumen() : await tabla(id); } catch (e) { vista.innerHTML = `<p class="empty">${esc(e.message)}</p>`; }
+}
+
+async function resumen() {
+  const [mesas, orders, prods, users, inv] = await Promise.all(["/admin/tables", "/cocina/orders", "/admin/products", "/admin/users", "/admin/inventory"].map(p => api(p)));
+  const act = orders.filter(activo), ocup = mesas.filter(m => m.estado === "ocupada").length;
+  const stat = (n, t) => `<div class="stat"><b>${n}</b><span>${t}</span></div>`;
+  const recientes = [...orders].sort((a, b) => b.id - a.id).slice(0, 8);
+  vista.innerHTML = `<div class="stats">${stat(`${ocup}/${mesas.length}`, "mesas ocupadas (máximo 20)")}${stat(act.length, "pedidos activos")}
+    ${stat(act.filter(o => o.estado === "LISTO").length, "listos para servir")}${stat(prods.filter(p => !p.disponibilidad).length, "productos agotados")}
+    ${stat(users.length, "usuarios")}${stat(inv.length, "insumos en inventario")}</div>
+    <div class="bar"><h2>Pedidos recientes</h2></div><div class="tblwrap"><table class="tbl"><thead><tr><th>Pedido</th><th>Lugar</th><th>Tipo</th><th>Estado</th><th>Hace</th></tr></thead><tbody>
+    ${recientes.map(o => `<tr><td>#${o.id}</td><td>${o.mesa_id ? "Mesa " + (mesas.find(m => m.id === o.mesa_id)?.numero ?? o.mesa_id) : "Para llevar"}</td><td>${o.tipo_pedido === "salon" ? "Salón" : "Para llevar"}</td><td>${chip(o.estado)}</td><td>${minutos(o.fecha_creacion)} min</td></tr>`).join("")
+      || '<tr><td colspan="5" class="empty">Aún no hay pedidos.</td></tr>'}</tbody></table></div>`;
+}
+
+async function tabla(id) {
+  const s = SEC[id];
+  cats = await api("/admin/categories");
+  const rows = await api(s.path);
+  vista.innerHTML = `<div class="bar"><h2>${s.t}</h2><button class="btn" id="nuevo">${s.nuevo}</button></div>
+    <div class="tblwrap"><table class="tbl"><thead><tr>${s.cols.map(c => `<th>${c[1]}</th>`).join("")}<th></th></tr></thead><tbody>
+    ${rows.length ? rows.map(r => `<tr>${s.cols.map(c => `<td>${c[2] ? c[2](r) : esc(r[c[0]])}</td>`).join("")}
+      <td class="acts"><button class="btn ghost sm" data-e="${r.id}">Editar</button><button class="btn danger sm" data-d="${r.id}">Eliminar</button></td></tr>`).join("")
+      : `<tr><td colspan="${s.cols.length + 1}" class="empty">${s.vacio}</td></tr>`}</tbody></table></div>`;
+  $("#nuevo").onclick = () => formulario(s, null);
+  vista.onclick = async e => {
+    const b = e.target.closest("button"); if (!b) return;
+    if (b.dataset.e) formulario(s, rows.find(r => r.id == b.dataset.e));
+    if (b.dataset.d && confirm("¿Eliminar este registro? No se puede deshacer.")) {
+      if (await run(() => api(`${s.path}/${b.dataset.d}`, "DELETE"), "Registro eliminado")) tabla(id);
+    }
+  };
+}
+
+function formulario(s, row) {
+  dlg.innerHTML = `<form id="f"><h2>${row ? "Editar" : s.nuevo}</h2>${s.fields.map(([k, l, t, o, req]) => {
+    const v = row?.[k] ?? "", id = "f_" + k;
+    if (t === "select" || t === "snum") return `<label>${l}<select id="${id}" required>${o().map(([val, txt]) => `<option value="${esc(val)}" ${String(val) === String(v) ? "selected" : ""}>${esc(txt)}</option>`).join("")}</select></label>`;
+    if (t === "checkbox") return `<label class="chk"><input type="checkbox" id="${id}" ${row ? (v ? "checked" : "") : "checked"}> ${l}</label>`;
+    const pw = t === "password";
+    return `<label>${l}<input id="${id}" type="${t}" ${t === "number" ? 'step="any" min="0"' : ""} value="${pw ? "" : esc(v)}" ${req && !(pw && row) ? "required" : ""} ${pw && row ? 'placeholder="Déjala vacía para conservarla"' : ""}></label>`;
+  }).join("")}<div class="dlg-acts"><button type="button" class="btn ghost" id="cancel">Cancelar</button><button class="btn">Guardar</button></div></form>`;
+  $("#cancel").onclick = () => dlg.close();
+  $("#f").onsubmit = async e => {
+    e.preventDefault();
+    const body = {};
+    for (const [k, , t] of s.fields) {
+      const el = $("#f_" + k);
+      let v = t === "checkbox" ? el.checked : (t === "number" || t === "snum") ? Number(el.value) : el.value.trim();
+      if (t === "password" && !v) continue;
+      body[k] = v;
+    }
+    const ok = await run(() => api(row ? `${s.path}/${row.id}` : s.path, row ? "PUT" : "POST", body), row ? "Cambios guardados" : "Registro creado");
+    if (ok) { dlg.close(); tabla(actual); }
+  };
+  dlg.showModal();
+}
+ir(location.hash.slice(1));
+</script>
+</body>
+</html>

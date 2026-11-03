@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cocina · PoliRestaurante</title>
+<link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+<main class="main">
+  <header class="head">
+    <div><h1>Cocina</h1><p class="sub" id="resumen">Cargando pedidos…</p></div>
+  </header>
+  <div class="kcols" id="tablero"></div>
+</main>
+<script src="/static/core.js"></script>
+<script>
+shell("cocina");
+// [estado, título, estado siguiente, texto del botón, clase]
+const COLS = [
+  ["PENDIENTE", "Por preparar", "EN PREPARACIÓN", "Empezar a preparar", ""],
+  ["EN PREPARACIÓN", "En preparación", "LISTO", "Marcar listo", "prep"],
+  ["LISTO", "Listos para servir", "ENTREGADO", "Entregado", "listo"],
+];
+let datos = [];
+
+async function cargar() {
+  const [orders, menu, mesas] = await Promise.all([api("/cocina/orders"), api("/mesero/menu"), api("/mesero/tables")]);
+  const nombre = Object.fromEntries(menu.map(p => [p.id, p.nombre]));
+  const numero = Object.fromEntries(mesas.map(m => [m.id, m.numero]));
+  const act = orders.filter(activo).sort((a, b) => a.id - b.id);
+  const items = await Promise.all(act.map(o => api(`/mesero/orders/${o.id}/items`)));
+  datos = act.map((o, i) => ({ ...o, items: items[i], nombre, numero }));
+  pintar();
+}
+
+function ticket(o, [, , sig, txt, cls]) {
+  const min = minutos(o.fecha_creacion), edad = min >= 15 ? "late" : min >= 8 ? "warn" : "";
+  const vacio = !o.items.length;
+  return `<article class="ticket ${cls}">
+    <header><b>${o.mesa_id ? "Mesa " + (o.numero[o.mesa_id] ?? o.mesa_id) : "Para llevar"}</b><span class="age ${edad}">${min} min</span></header>
+    <small style="color:var(--mut)">Pedido #${o.id}</small>
+    <ul>${vacio ? '<li style="color:var(--mut)">Sin productos todavía</li>' :
+      o.items.map(i => `<li><b>${i.cantidad}×</b>${esc(o.nombre[i.product_id] ?? "Producto " + i.product_id)}</li>`).join("")}</ul>
+    <div class="row">
+      <button class="btn ${o.estado === "LISTO" ? "go" : ""}" data-id="${o.id}" data-e="${sig}" ${vacio ? "disabled" : ""}>${txt}</button>
+      <button class="btn danger" data-id="${o.id}" data-e="CANCELADO" aria-label="Cancelar pedido ${o.id}">Cancelar</button>
+    </div></article>`;
+}
+
+function pintar() {
+  $("#resumen").textContent = datos.length ? `${datos.length} pedidos activos` : "Sin pedidos activos";
+  $("#tablero").innerHTML = COLS.map(c => {
+    const lista = datos.filter(o => o.estado === c[0]);
+    return `<section class="kcol"><h2>${c[1]} <span class="cnt" style="background:var(--line);color:var(--ink)">${lista.length}</span></h2>
+      <div class="rail-list">${lista.map(o => ticket(o, c)).join("") || '<p class="empty">Nada por aquí.</p>'}</div></section>`;
+  }).join("");
+}
+
+$("#tablero").addEventListener("click", async e => {
+  const b = e.target.closest("button[data-e]"); if (!b) return;
+  if (b.dataset.e === "CANCELADO" && !confirm("¿Cancelar este pedido? La mesa quedará libre.")) return;
+  b.disabled = true;
+  await run(() => api(`/cocina/orders/${b.dataset.id}/status?estado=${encodeURIComponent(b.dataset.e)}`, "PUT"));
+  await cargar().catch(err => toast(err.message, "err"));
+});
+poll(cargar, 5000);
+</script>
+</body>
+</html>

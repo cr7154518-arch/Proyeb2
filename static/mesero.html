@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Salón · PoliRestaurante</title>
+<link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+<main class="main">
+  <header class="head">
+    <div><h1>Salón</h1><p class="sub" id="resumen">Cargando mesas…</p></div>
+    <button class="btn ghost" id="btn-llevar">Nuevo pedido para llevar</button>
+  </header>
+  <div class="split">
+    <div>
+      <section aria-label="Mesas"><div class="grid-mesas" id="mesas"></div></section>
+      <section id="llevar-sec" hidden><h2 style="margin-top:26px">Para llevar</h2><div class="llevar" id="llevar"></div></section>
+    </div>
+    <aside class="panel" id="panel" aria-live="polite"></aside>
+  </div>
+</main>
+<script src="/static/core.js"></script>
+<script>
+shell("mesero");
+const S = { mesas: [], orders: [], menu: [], cats: [], items: {}, sel: null, cat: 0, q: "", prev: {}, built: null };
+const meseroId = () => Number(localStorage.getItem("mesero_id")) || null;
+const numMesa = id => S.mesas.find(m => m.id === id)?.numero ?? id;
+const totalDe = id => (S.items[id] || []).reduce((s, i) => s + i.cantidad * i.precio_unitario, 0);
+
+async function iniciar() {
+  const [users, menu, cats] = await Promise.all([api("/admin/users"), api("/mesero/menu"), api("/admin/categories")]);
+  S.menu = menu; S.cats = cats;
+  const quienes = users.filter(u => ["mesero", "admin"].includes(u.rol));
+  $("#rail-foot").innerHTML = `<label style="color:#c5d4cc">Atiende<select id="quien"><option value="">Elige un mesero…</option>${
+    quienes.map(u => `<option value="${u.id}">${esc(u.nombre)}</option>`).join("")}</select></label>`;
+  $("#quien").value = meseroId() ?? "";
+  $("#quien").onchange = e => localStorage.setItem("mesero_id", e.target.value);
+  poll(cargar, 6000);
+}
+
+async function cargar() {
+  const [mesas, orders] = await Promise.all([api("/mesero/tables"), api("/cocina/orders")]);
+  S.mesas = mesas.sort((a, b) => a.numero - b.numero);
+  S.orders = orders.filter(activo);
+  for (const o of S.orders) {
+    if (S.prev[o.id] && S.prev[o.id] !== "LISTO" && o.estado === "LISTO")
+      toast(`Pedido #${o.id} listo para servir`);
+    S.prev[o.id] = o.estado;
+  }
+  if (S.sel && !S.orders.some(o => o.id === S.sel)) S.sel = null;
+  if (S.sel) S.items[S.sel] = await api(`/mesero/orders/${S.sel}/items`);
+  pintar();
+}
+
+function pintar() {
+  const libres = S.mesas.filter(m => !S.orders.some(o => o.mesa_id === m.id) && m.estado !== "ocupada").length;
+  $("#resumen").textContent = `${libres} de ${S.mesas.length} mesas libres · ${S.orders.length} pedidos activos`;
+  $("#mesas").innerHTML = S.mesas.length ? S.mesas.map(m => {
+    const o = S.orders.find(x => x.mesa_id === m.id);
+    const cls = o ? (o.estado === "LISTO" ? "occ ready" : "occ") : (m.estado === "ocupada" ? "occ" : "");
+    return `<button class="mesa ${cls} ${o && o.id === S.sel ? "sel" : ""}" data-m="${m.id}">
+      <b>${m.numero}</b><span>${m.capacidad} personas</span>
+      ${o ? `${chip(o.estado)}<span>${minutos(o.fecha_creacion)} min</span>` : (m.estado === "ocupada" ? "<span>Ocupada</span>" : '<span class="free">Libre</span>')}</button>`;
+  }).join("") : '<p class="empty">Aún no hay mesas. Créalas en Administración.</p>';
+  const llevar = S.orders.filter(o => !o.mesa_id);
+  $("#llevar-sec").hidden = !llevar.length;
+  $("#llevar").innerHTML = llevar.map(o => `<button class="mesa occ ${o.estado === "LISTO" ? "ready" : ""} ${o.id === S.sel ? "sel" : ""}" data-o="${o.id}"><b>#${o.id}</b>${chip(o.estado)}</button>`).join("");
+  pintarPanel();
+}
+
+function pintarPanel() {
+  const p = $("#panel"), o = S.orders.find(x => x.id === S.sel);
+  if (!o) { S.built = null; p.innerHTML = '<p class="empty">Toca una mesa libre para abrir un pedido, o una ocupada para verlo.</p>'; return; }
+  if (S.built !== o.id) {   // el menú se arma una vez por pedido para no perder lo escrito en la búsqueda
+    S.built = o.id;
+    p.innerHTML = `<div id="p-head"></div><ul class="items" id="p-items"></ul><div id="p-total"></div>
+      <h3>Agregar productos</h3>
+      <div class="cats" id="p-cats"></div>
+      <input id="p-q" type="search" placeholder="Buscar en el menú" style="width:100%;margin-bottom:8px" aria-label="Buscar en el menú">
+      <div class="pick" id="p-menu"></div><div id="p-acts" style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap"></div>`;
+    $("#p-q").oninput = e => { S.q = e.target.value.toLowerCase(); menuLista(); };
+    menuLista();
+  }
+  const its = S.items[o.id] || [], nombre = id => S.menu.find(m => m.id === id)?.nombre ?? `Producto ${id}`;
+  $("#p-head").innerHTML = `<div class="bar" style="margin:0"><h2>${o.mesa_id ? "Mesa " + numMesa(o.mesa_id) : "Para llevar"} · #${o.id}</h2>${chip(o.estado)}</div>`;
+  $("#p-items").innerHTML = its.length ? its.map(i => `<li><div class="n">${esc(nombre(i.product_id))}<small>${money(i.precio_unitario)} c/u</small></div>
+    <div class="qty"><button data-c="${i.id}" data-d="-1" aria-label="Quitar uno">−</button><b>${i.cantidad}</b><button data-c="${i.id}" data-d="1" aria-label="Agregar uno">+</button></div></li>`).join("")
+    : '<li class="empty" style="display:block">Pedido vacío. Agrega productos del menú.</li>';
+  $("#p-total").innerHTML = `<div class="total"><span>Total</span><span>${money(totalDe(o.id))}</span></div>`;
+  $("#p-acts").innerHTML = (o.estado === "LISTO" ? '<button class="btn go" data-e="ENTREGADO">Marcar entregado</button>' : "") +
+    '<button class="btn danger" data-e="CANCELADO">Cancelar pedido</button>';
+}
+
+function menuLista() {
+  $("#p-cats").innerHTML = [{ id: 0, nombre: "Todo" }, ...S.cats].map(c => `<button data-cat="${c.id}" aria-pressed="${c.id === S.cat}">${esc(c.nombre)}</button>`).join("");
+  const lista = S.menu.filter(p => (!S.cat || p.categoria_id === S.cat) && p.nombre.toLowerCase().includes(S.q));
+  $("#p-menu").innerHTML = lista.length ? lista.map(p => `<button data-p="${p.id}" ${p.disponibilidad ? "" : "disabled"}><span>${esc(p.nombre)}${p.disponibilidad ? "" : " (agotado)"}</span><b>${money(p.precio)}</b></button>`).join("")
+    : '<p class="empty">Ningún producto coincide.</p>';
+}
+
+async function abrir(mesa) {
+  if (!meseroId()) return toast("Elige quién atiende en el menú lateral.", "err");
+  const o = await run(() => api("/mesero/orders", "POST", { mesa_id: mesa ? mesa.id : null, mesero_id: meseroId(), tipo_pedido: mesa ? "salon" : "para_llevar" }));
+  if (o && o.id) { S.sel = o.id; S.items[o.id] = []; await cargar(); }
+}
+async function estado(id, e) {
+  if (e === "CANCELADO" && !confirm("¿Cancelar este pedido? La mesa quedará libre.")) return;
+  if (await run(() => api(`/cocina/orders/${id}/status?estado=${encodeURIComponent(e)}`, "PUT"), e === "ENTREGADO" ? "Pedido entregado" : "Pedido cancelado")) { await cargar(); }
+}
+async function cambiarCant(itemId, d) {
+  const it = (S.items[S.sel] || []).find(i => i.id === itemId); if (!it) return;
+  const n = it.cantidad + d;
+  await run(() => n <= 0 ? api(`/mesero/orders/${S.sel}/items/${itemId}`, "DELETE") : api(`/mesero/orders/${S.sel}/items/${itemId}`, "PUT", { cantidad: n }));
+  await cargar();
+}
+async function agregar(pid) {
+  const it = (S.items[S.sel] || []).find(i => i.product_id === pid);
+  if (it) return cambiarCant(it.id, 1);
+  await run(() => api(`/mesero/orders/${S.sel}/items`, "POST", { product_id: pid, cantidad: 1 }));
+  await cargar();
+}
+
+document.addEventListener("click", e => {
+  const t = e.target.closest("button"); if (!t) return;
+  const d = t.dataset;
+  if (d.m) { const m = S.mesas.find(x => x.id == d.m), o = S.orders.find(x => x.mesa_id == d.m);
+    if (o) { S.sel = o.id; cargar(); } else if (m.estado === "ocupada") toast("Esa mesa figura ocupada sin pedido. Libérala en Administración.", "err"); else abrir(m); }
+  else if (d.o) { S.sel = Number(d.o); cargar(); }
+  else if (d.p) agregar(Number(d.p));
+  else if (d.c) cambiarCant(Number(d.c), Number(d.d));
+  else if (d.cat !== undefined) { S.cat = Number(d.cat); menuLista(); }
+  else if (d.e) estado(S.sel, d.e);
+});
+$("#btn-llevar").onclick = () => abrir(null);
+iniciar().catch(e => toast(e.message, "err"));
+</script>
+</body>
+</html>
