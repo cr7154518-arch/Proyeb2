@@ -6,7 +6,7 @@ from sqlmodel import Session, select
 from DataBase import get_session
 from models.Order import EstadoPedido, Order
 from manager import RestaurantManager
-#341255
+
 router = APIRouter(prefix="/cocina", tags=["Cocina"])
 
 
